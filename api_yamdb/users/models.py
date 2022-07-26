@@ -1,78 +1,67 @@
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 
-class UserManager(BaseUserManager):
-    def create_user(self, email, username=None, password=None):
-        if not email:
-            raise ValueError('У пользователя обязан быть адрес эл. почты')
-        if username is None:
-            username = email.split('@')[0]
-        user = self.model(
-            email=self.normalize_email(email),
-            username=username,
-        )
-        
-        user.save(using=self._db)
-        return user
-
-    def create_superuser(self, email, username=None, password=None):
-        if not email:
-            raise ValueError('У пользователя обязан быть адрес эл. почты')
-        if username is None:
-            username = email.split('@')[0]
-        user = self.create_user(
-            email,
-            username=username,
-        )
-        
-        user.role = user.UserRoles.ADMIN
-        user.save(using=self._db)
-        return user
-
-
-class User(AbstractBaseUser):
-
-    class UserRoles(models.TextChoices):
-        USER = 'user', ('User')
-        MODERATOR = 'moderator', ('Moderator')
-        ADMIN = 'admin', ('Admin')
-
+class User(AbstractUser):
+    USER = "user"
+    MODERATOR = "moderator"
+    ADMIN = "admin"
+    USER_ROLES = (
+        (USER, "Пользователь"),
+        (MODERATOR, "Модератор"),
+        (ADMIN, "Администратор"),
+    )
     username = models.CharField(
-        max_length=100,
-        null=False,
-        blank=False,
+        verbose_name="Имя пользователя",
+        max_length=50,
         unique=True,
-        verbose_name='Никнейм'
+        blank=False,
+        null=False,
+    )
+    bio = models.TextField(
+        verbose_name="Биография",
+        blank=True,
     )
     email = models.EmailField(
+        verbose_name="email",
         unique=True,
-        blank=False,
-        verbose_name='Email'
+        null=False,
+        max_length=254
     )
-    first_name = models.CharField(max_length=100, verbose_name='Имя')
-    last_name = models.CharField(max_length=100, verbose_name='Фамилия')
-    bio = models.TextField(max_length=100, verbose_name='О себе')
-    role = models.CharField(
+    first_name = models.CharField(
+        verbose_name="Имя",
         max_length=50,
-        choices=UserRoles.choices,
-        default=UserRoles.USER,
-        verbose_name='Уровень прав доступа'
+        blank=True
     )
+    last_name = models.CharField(
+        verbose_name="Фамилия",
+        max_length=50,
+        blank=True
+    )
+    role = models.CharField(
+        choices=USER_ROLES,
+        max_length=10,
+        verbose_name="Роль пользователя",
+        default=USER,
+    )
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False)
 
-    @property
-    def is_moderator(self):
-        return self.role == self.UserRoles.MODERATOR
+    REQUIRED_FIELDS = ["email"]
+    USERNAME_FIELDS = "email"
+
+    def __str__(self):
+        return self.username
 
     @property
     def is_admin(self):
-        return self.role == self.UserRoles.ADMIN
+        return self.role == self.ADMIN or self.is_superuser
 
-    USERNAME_FIELD = 'username'
-    EMAIL_FIELD = 'email'
-    REQUIRED_FIELDS = ['email', ]
+    @property
+    def is_moderator(self):
+        return self.role == self.MODERATOR
 
-    objects = UserManager()
-
-    class Meta:
-        ordering = ['username']
+    @property
+    def is_user(self):
+        return self.role == self.USER
