@@ -5,10 +5,10 @@ from .views import (CommentViewSet,
                     ReviewViewSet,
                     send_confirmation_code,
                     send_token,
-                    UsersViewSet)
+                    UserViewSet)
 
 router_v1 = DefaultRouter()
-router_v1.register(r"users", UsersViewSet, basename="users")
+router_v1.register(r"users", UserViewSet, basename="users")
 # Роутер genres
 # Роутер categories
 # Роутер titles

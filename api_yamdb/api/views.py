@@ -84,7 +84,13 @@ def send_token(request):
     )
 
 
-class UsersViewSet(viewsets.ModelViewSet):
+class UserViewSet(viewsets.ModelViewSet):
+    """Представление для модели User.
+
+    Набор представлений, который обеспечивает действия по умолчанию
+    «получить», «обновить».
+    """
+
     serializer_class = UserSerializer
     filter_backends = (filters.SearchFilter, filters.OrderingFilter)
     permission_classes = (IsAdmin,)
@@ -95,10 +101,7 @@ class UsersViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=False,
-        methods=(
-                'get',
-                'patch',
-        ),
+        methods=('get', 'patch'),
         serializer_class=UserMeSerializer,
         permission_classes=[permissions.IsAuthenticated],
     )
