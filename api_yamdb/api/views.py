@@ -2,19 +2,27 @@ from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, viewsets, status, filters
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from users.models import User
+from users.models import User, Category, Genre, Title
+from .mixins import ListCreateDestroyViewSet
+from .filters import TitlesFilter, IsAdminOrReadOnly
 from users.permissions import IsAdmin
 from .serializers import (CommentSerializer,
                           ConfirmationCodeSerializer,
                           EmailSerializer,
+                          CategorySerializer,
+                          GenreSerializer,
+                          TitleSerializer,
                           ReviewSerializer,
                           UserSerializer,
-                          UserMeSerializer)
+                          UserMeSerializer
+                          ReadOnlyTitleSerializer,
+                          TitleSerializer)
 
 
 @api_view(['POST'])
@@ -118,13 +126,39 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# Представление для модели Genre
+class CategoryViewSet(ListCreateDestroyViewSet):
+    """Представление для модели Category."""
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ("name",)
+    lookup_field = "slug"
+
+class GenreViewSet(ListCreateDestroyViewSet):
+    """Представление для модели Genre."""
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ("name",)
+    lookup_field = "slug"
 
 
-# Представление для модели Category
+class TitleViewSet(viewsets.ModelViewSet):
+    """Представление для модели Title."""
+    queryset = Title.objects.all().annotate(
+        Avg("reviews__score")
+    ).order_by("name")
+    serializer_class = TitleSerializer
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = TitlesFilter
 
-
-# Представление для модели Title
+    def get_serializer_class(self):
+        if self.action in ("retrieve", "list"):
+            return ReadOnlyTitleSerializer
+        return TitleSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

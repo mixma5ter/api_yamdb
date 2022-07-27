@@ -32,13 +32,60 @@ class UserMeSerializer(UserSerializer):
     role = serializers.CharField(read_only=True)
 
 
-# Сериализатор модели Genre
+class CategorySerializer(serializers.ModelSerializer):
+    """Сериализатор модели Category."""
+
+    class Meta:
+        model = Category
+        exclude = ('id',)
+        lookup_field = 'slug'
+        extra_kwargs = {
+            'url': {'lookup_field': 'slug'}
+        }
 
 
-# Сериализатор модели Category
+class GenreSerializer(serializers.ModelSerializer):
+    """Сериализатор модели Genre."""
+
+    class Meta:
+        model = Genre
+        exclude = ('id',)
+        lookup_field = 'slug'
+        extra_kwargs = {
+            'url': {'lookup_field': 'slug'}
+        }
 
 
-# Сериализатор модели Title
+class TitleSerializer(serializers.ModelSerializer):
+    """Сериализатор модели Title."""
+    genre = serializers.SlugRelatedField(
+        slug_field='slug', many=True, queryset=Genre.objects.all()
+    )
+    category = serializers.SlugRelatedField(
+        slug_field='slug', queryset=Category.objects.all()
+    )
+
+    class Meta:
+        model = Title
+        fields = (
+            'name', 'year', 'description', 'genre',
+            'category', 'rating'
+        )
+
+
+class ReadOnlyTitleSerializer(serializers.ModelSerializer):
+    rating = serializers.IntegerField(
+        source='reviews__score__avg', read_only=True
+    )
+    genre = GenreSerializer(many=True)
+    category = CategorySerializer()
+
+    class Meta:
+        model = Title
+        fields = (
+            'id', 'name', 'year', 'rating', 'description',
+            'genre', 'category'
+        )
 
 
 class ReviewSerializer(serializers.ModelSerializer):
