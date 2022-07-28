@@ -58,24 +58,33 @@ class GenreSerializer(serializers.ModelSerializer):
 
 class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор модели Title."""
+
     genre = serializers.SlugRelatedField(
-        slug_field='slug', many=True, queryset=Genre.objects.all()
+        slug_field='slug',
+        many=True,
+        queryset=Genre.objects.all()
     )
     category = serializers.SlugRelatedField(
-        slug_field='slug', queryset=Category.objects.all()
+        slug_field='slug',
+        queryset=Category.objects.all()
     )
 
     class Meta:
         model = Title
         fields = (
-            'name', 'year', 'description', 'genre',
-            'category', 'rating'
+            'name',
+            'year',
+            'description',
+            'genre',
+            'category',
+            'rating'
         )
 
 
 class ReadOnlyTitleSerializer(serializers.ModelSerializer):
     rating = serializers.IntegerField(
-        source='reviews__score__avg', read_only=True
+        source='reviews__score__avg',
+        read_only=True
     )
     genre = GenreSerializer(many=True)
     category = CategorySerializer()
@@ -83,22 +92,41 @@ class ReadOnlyTitleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Title
         fields = (
-            'id', 'name', 'year', 'rating', 'description',
-            'genre', 'category'
+            'id',
+            'name',
+            'year',
+            'rating',
+            'description',
+            'genre',
+            'category'
         )
 
 
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериализатор модели Review."""
 
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True,
+        default=serializers.CurrentUserDefault()
+    )
+    pub_date = serializers.DateTimeField(read_only=True)
+
     class Meta:
         model = Review
-        fields = '__all__'
+        fields = ('id', 'text', 'score', 'author', 'pub_date')
 
 
 class CommentSerializer(serializers.ModelSerializer):
     """Сериализатор модели Comment."""
 
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True,
+        default=serializers.CurrentUserDefault()
+    )
+    pub_date = serializers.DateTimeField(read_only=True)
+
     class Meta:
         model = Comment
-        fields = '__all__'
+        fields = ('id', 'text', 'author', 'pub_date')
