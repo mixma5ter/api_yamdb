@@ -31,6 +31,7 @@ from .serializers import (CommentSerializer,
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def send_confirmation_code(request):
+    """Отправляет код подтверждения на почту."""
     if request.method == 'POST':
         serializer = EmailSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -72,6 +73,7 @@ def send_confirmation_code(request):
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def send_token(request):
+    """Отправляет токен по коду подтверждения."""
     serializer = ConfirmationCodeSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     confirmation_code = serializer.validated_data.get('confirmation_code')

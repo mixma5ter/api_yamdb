@@ -6,11 +6,15 @@ from reviews.models import Category, Comment, Genre, Title, Review, User
 
 
 class EmailSerializer(serializers.Serializer):
+    """Сериализатор получения кода подтверждения."""
+
     username = serializers.CharField(required=True)
     email = serializers.EmailField(required=True)
 
 
 class ConfirmationCodeSerializer(serializers.Serializer):
+    """Сериализатор получения токена."""
+
     username = serializers.CharField(required=True)
     confirmation_code = serializers.CharField(required=True)
 
@@ -31,6 +35,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserMeSerializer(UserSerializer):
+    """Сериализатор модели User."""
+
     role = serializers.CharField(read_only=True)
 
 
@@ -77,6 +83,8 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class ReadOnlyTitleSerializer(serializers.ModelSerializer):
+    """Сериализатор модели Title."""
+
     genre = GenreSerializer(many=True, read_only=True)
     category = CategorySerializer(read_only=True)
 
