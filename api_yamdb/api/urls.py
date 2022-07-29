@@ -3,12 +3,12 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (CommentViewSet,
                     ReviewViewSet,
-                    send_confirmation_code,
-                    send_token,
                     CategoryViewSet,
                     GenreViewSet,
                     TitleViewSet,
-                    UserViewSet)
+                    UserViewSet,
+                    send_confirmation_code,
+                    send_token)
 
 router_v1 = DefaultRouter()
 router_v1.register(r"users", UserViewSet, basename="users")
