@@ -7,4 +7,6 @@ class ListCreateDestroyViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
+    """Mixin обрабатывает создание, удаление и получение списка объектов."""
+
     pass
