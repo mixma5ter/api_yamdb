@@ -11,10 +11,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Category, Genre, Title, Review
 from users.models import User
-from users.permissions import IsAdmin
 from .filters import TitlesFilter
 from .mixins import ListCreateDestroyViewSet
-from .permissions import IsAdminOrReadOnly, ReviewCommentPermission
+from .permissions import IsAdmin, IsAdminOrReadOnly, ReviewCommentPermission
 from .serializers import (CommentSerializer,
                           ConfirmationCodeSerializer,
                           EmailSerializer,
