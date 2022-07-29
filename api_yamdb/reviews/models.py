@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 from users.models import User
 from .validators import validate_year
@@ -82,11 +83,12 @@ class Title(models.Model):
         null=True,
         blank=True
     )
+    rating = models.IntegerField(null=True, default=None)
 
     class Meta:
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
-        ordering = ['name']
+        ordering = ("-pk",)
 
     def __str__(self):
         return self.name
@@ -105,14 +107,25 @@ class Review(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name='reviews')
-    score = models.IntegerField(
+    score = models.PositiveSmallIntegerField(
         'Оценка',
-        default=1
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
     )
     pub_date = models.DateTimeField(
         'Дата и время публикации',
         auto_now_add=True
     )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["author", "title"], name="unique_review"
+            )
+        ]
+        ordering = ["-pub_date"]
+        verbose_name = "Отзыв"
+        verbose_name_plural = "Отзывы"
+        default_related_name = "reviews"
 
     def __str__(self):
         return f'Отзыв на {self.title} от {self.author}'
@@ -137,6 +150,11 @@ class Comment(models.Model):
         'Дата и время публикации',
         auto_now_add=True
     )
+
+    class Meta:
+        ordering = ["-pub_date"]
+        verbose_name = "Комментарий"
+        verbose_name_plural = "Комментарии"
 
     def __str__(self):
         return f'Комментарий на {self.review} от {self.author}'

@@ -9,12 +9,12 @@ from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from reviews.models import Category, Genre, Title
+from reviews.models import Category, Genre, Title, Review
 from users.models import User
 from users.permissions import IsAdmin
 from .filters import TitlesFilter
 from .mixins import ListCreateDestroyViewSet
-from .permissions import IsAdminOrReadOnly
+from .permissions import IsAdminOrReadOnly, ReviewCommentPermission
 from .serializers import (CommentSerializer,
                           ConfirmationCodeSerializer,
                           EmailSerializer,
@@ -36,6 +36,11 @@ def send_confirmation_code(request):
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data.get('email')
         username = serializer.validated_data.get('username')
+        if username == "me":
+            return Response(
+                "Нельзя создавать пользователя с таким никнеймом!",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         if User.objects.filter(email=email).exists():
             return Response(
                 'Данный email уже используется!',
@@ -154,9 +159,7 @@ class GenreViewSet(ListCreateDestroyViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     """Представление для модели Title."""
 
-    queryset = Title.objects.all().annotate(
-        Avg("reviews__score")
-    ).order_by("name")
+    queryset = Title.objects.all()
     serializer_class = TitleSerializer
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = [DjangoFilterBackend]
@@ -167,6 +170,17 @@ class TitleViewSet(viewsets.ModelViewSet):
             return ReadOnlyTitleSerializer
         return TitleSerializer
 
+    def get_permissions(self):
+        if self.action not in ('list', 'retrieve'):
+            return (IsAdmin(),)
+        return super().get_permissions()
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.rating = instance.reviews.all().aggregate(Avg('score'))['score__avg']
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
 
 class ReviewViewSet(viewsets.ModelViewSet):
     """Представление для модели Review.
@@ -176,6 +190,20 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = ReviewSerializer
+    permission_classes = (ReviewCommentPermission,)
+    
+    def get_queryset(self):
+        title_id = self.kwargs.get("title_id")
+        title = get_object_or_404(Title, id=title_id)
+        return title.reviews.all()
+
+    def perform_create(self, serializer):
+        title_id = self.kwargs.get("title_id")
+        title = get_object_or_404(Title, id=title_id)
+        serializer.save(
+            author=self.request.user,
+            title=title,
+        )
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -186,3 +214,19 @@ class CommentViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = CommentSerializer
+    permission_classes = (ReviewCommentPermission,)
+
+    def get_queryset(self):
+        review_id = self.kwargs.get("review_id")
+        title_id = self.kwargs.get("title_id")
+        review = get_object_or_404(Review, id=review_id, title_id=title_id)
+        return review.comments.all()
+
+    def perform_create(self, serializer):
+        review_id = self.kwargs.get("review_id")
+        title_id = self.kwargs.get("title_id")
+        review = get_object_or_404(Review, id=review_id, title_id=title_id)
+        serializer.save(
+            author=self.request.user,
+            review=review,
+        )
