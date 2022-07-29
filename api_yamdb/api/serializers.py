@@ -77,7 +77,6 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class ReadOnlyTitleSerializer(serializers.ModelSerializer):
-    
     genre = GenreSerializer(many=True, read_only=True)
     category = CategorySerializer(read_only=True)
 
@@ -99,7 +98,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         default=serializers.CurrentUserDefault()
     )
     pub_date = serializers.DateTimeField(read_only=True)
-    
+
     def validate(self, data):
         request = self.context['request']
         author = request.user
@@ -109,6 +108,7 @@ class ReviewSerializer(serializers.ModelSerializer):
             if Review.objects.filter(title=title, author=author).exists():
                 raise ValidationError('Разрешен только один ревью!')
         return data
+
     class Meta:
         model = Review
         fields = '__all__'

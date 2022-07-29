@@ -101,11 +101,7 @@ def send_token(request):
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    """Представление для модели User.
-
-    Набор представлений, который обеспечивает действия по умолчанию
-    «получить», «обновить».
-    """
+    """Представление для модели User."""
 
     serializer_class = UserSerializer
     filter_backends = (filters.SearchFilter, filters.OrderingFilter)
@@ -177,21 +173,19 @@ class TitleViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
-        instance.rating = instance.reviews.all().aggregate(Avg('score'))['score__avg']
+        instance.rating = (instance.reviews.all().aggregate(
+            Avg('score'))['score__avg']
+        )
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    """Представление для модели Review.
-
-    Набор представлений, который обеспечивает действия по умолчанию
-    «создать», «получить», «обновить», «обновить частично», «удалить».
-    """
+    """Представление для модели Review."""
 
     serializer_class = ReviewSerializer
     permission_classes = (ReviewCommentPermission,)
-    
+
     def get_queryset(self):
         title_id = self.kwargs.get("title_id")
         title = get_object_or_404(Title, id=title_id)
@@ -207,11 +201,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    """Представление для модели Comment.
-
-    Набор представлений, который обеспечивает действия по умолчанию
-    «создать», «получить», «обновить», «обновить частично», «удалить».
-    """
+    """Представление для модели Comment."""
 
     serializer_class = CommentSerializer
     permission_classes = (ReviewCommentPermission,)
