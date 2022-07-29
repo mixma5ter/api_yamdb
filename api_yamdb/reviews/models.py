@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 
@@ -101,7 +102,8 @@ class Review(models.Model):
         Title,
         verbose_name='Отзыв',
         on_delete=models.CASCADE,
-        related_name='reviews')
+        related_name='reviews'
+    )
     text = models.TextField('Текст отзыва')
     author = models.ForeignKey(
         User,
