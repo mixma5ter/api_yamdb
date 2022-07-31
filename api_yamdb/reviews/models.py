@@ -83,12 +83,14 @@ class Title(models.Model):
         null=True,
         blank=True
     )
-    rating = models.IntegerField(null=True, default=None)
 
     class Meta:
-        verbose_name = 'Произведение'
-        verbose_name_plural = 'Произведения'
-        ordering = ("-pk",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=['name', 'category'],
+                name='unique_name_category'
+            )
+        ]
 
     def __str__(self):
         return self.name
