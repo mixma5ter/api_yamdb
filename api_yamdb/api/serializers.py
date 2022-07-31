@@ -5,7 +5,8 @@ from rest_framework.generics import get_object_or_404
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import AccessToken
 
-from reviews.models import Category, Comment, Genre, Title, Review, User
+from reviews.models import Category, Comment, Genre, Title, Review
+from users.models import User
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
@@ -27,7 +28,7 @@ class TokenObtainSerializer(TokenObtainPairSerializer):
     """Сериализатор получения токена."""
 
     username_field = User.USERNAME_FIELD
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['password'].required = False
@@ -59,7 +60,7 @@ class UserSerializer(serializers.ModelSerializer):
             'bio',
             'role',
         )
-    
+
     def validate_username(self, value):
         if value == 'me':
             raise serializers.ValidationError(
@@ -129,9 +130,8 @@ class TitleSerializer(serializers.ModelSerializer):
         return round(rating, 1)
 
 
-
 class TitleCreateSerializer(serializers.ModelSerializer):
-    """Сериализатор модели Title для созания объекта."""
+    """Сериализатор модели Title для создания объекта."""
 
     genre = serializers.SlugRelatedField(
         queryset=Genre.objects.all(),

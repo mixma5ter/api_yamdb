@@ -2,7 +2,7 @@ from rest_framework import permissions
 
 
 class IsAdminOrReadOnly(permissions.IsAdminUser):
-    """ Доступ только для чтения. У админа полный доступ. """
+    """Доступ только для чтения. У админа полный доступ."""
 
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
@@ -20,7 +20,7 @@ class IsAdminOrReadOnly(permissions.IsAdminUser):
 
 
 class IsAdmin(permissions.BasePermission):
-    """ Permission for admin. """
+    """Доступ только у админа."""
 
     def has_permission(self, request, view):
         if request.user.is_authenticated:
@@ -34,7 +34,7 @@ class IsAdmin(permissions.BasePermission):
 
 
 class IsAuthorOrStaff(permissions.BasePermission):
-    """ Permission for comments. """
+    """Доступ только для чтения. У админа и автора полный доступ."""
 
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:

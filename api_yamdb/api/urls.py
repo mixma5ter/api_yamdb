@@ -30,5 +30,5 @@ urlpatterns = [
     path('v1/', include(router_v1.urls)),
     path("v1/auth/signup/", register_user, name='registration'),
     path("v1/auth/token/", TokenObtainView.as_view(),
-        name='token_obtain_pair',),
+         name='token_obtain_pair', ),
 ]
