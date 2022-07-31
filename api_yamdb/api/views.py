@@ -1,9 +1,8 @@
-from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
-from rest_framework import permissions, viewsets, status, filters
+from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -13,14 +12,14 @@ from users.models import User
 from .filters import TitlesFilter
 from .mixins import ListCreateDestroyViewSet
 from .permissions import IsAdmin, IsAdminOrReadOnly, IsAuthorOrStaff
-from .serializers import (TokenObtainSerializer,
-                          CreateUserSerializer,
-                          CategorySerializer,
+from .serializers import (CategorySerializer,
                           CommentSerializer,
+                          CreateUserSerializer,
                           GenreSerializer,
                           ReviewSerializer,
                           TitleCreateSerializer,
                           TitleSerializer,
+                          TokenObtainSerializer,
                           UserSerializer,
                           UserMeSerializer,
                           )
@@ -37,7 +36,6 @@ def send_registration_mail(user, token):
         recipient_list=[user.email],
         fail_silently=False,
     )
-
 
 
 @api_view(['POST'])
@@ -158,7 +156,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         review_id = self.kwargs.get('review_id')
         review = get_object_or_404(
             Review,
-            pk=review_id,
+            id=review_id,
             title=title_id,
         )
         return review.comments.filter(review__title_id=title_id).order_by('id')
@@ -168,7 +166,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         review_id = self.kwargs.get('review_id')
         review = get_object_or_404(
             Review,
-            pk=review_id,
+            id=review_id,
             title=title_id,
         )
         serializer.save(author=self.request.user, review=review)
