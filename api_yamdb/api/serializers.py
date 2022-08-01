@@ -9,21 +9,6 @@ from reviews.models import Category, Comment, Genre, Title, Review
 from users.models import User
 
 
-class CreateUserSerializer(serializers.ModelSerializer):
-    """Сериализатор для создания пользователя."""
-
-    class Meta:
-        fields = ('email', 'username')
-        model = User
-
-    def validate_username(self, value):
-        if value == 'me':
-            raise serializers.ValidationError(
-                'Нельзя создавать пользователя с ником "me"!'
-            )
-        return value
-
-
 class TokenObtainSerializer(TokenObtainPairSerializer):
     """Сериализатор получения токена."""
 
@@ -45,6 +30,21 @@ class TokenObtainSerializer(TokenObtainPairSerializer):
             )
         token = AccessToken.get_token(current_user)
         return {'token': str(token)}
+
+
+class CreateUserSerializer(serializers.ModelSerializer):
+    """Сериализатор для создания пользователя."""
+
+    class Meta:
+        fields = ('email', 'username')
+        model = User
+
+    def validate_username(self, value):
+        if value == 'me':
+            raise serializers.ValidationError(
+                'Нельзя создавать пользователя с ником "me"!'
+            )
+        return value
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -81,7 +81,7 @@ class UserMeSerializer(UserSerializer):
             'last_name',
             'role',
         )
-        read_only_fields = ['role']
+        read_only_fields = ('role',)
         model = User
 
 
