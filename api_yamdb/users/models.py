@@ -22,11 +22,13 @@ class User(AbstractUser):
         default=USER,
     )
 
+    @property
     def is_admin(self):
-        return self.role == self.ADMIN
+        return self.role == self.ADMIN or self.is_superuser or self.is_staff
 
+    @property
     def is_moderator(self):
         return self.role == self.MODERATOR
 
     class Meta:
-        ordering = ['username']
+        ordering = ('username',)

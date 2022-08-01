@@ -1,28 +1,58 @@
 import csv
+import sqlite3 as sq
 
-from django.core.management.base import BaseCommand
+from django.core.management import BaseCommand
 
-from users.models import User
+DIR = 'static/data/'
+SQL_TEMP = 'INSERT INTO {table} ({fields}) VALUES ({values});'
+
+CSV_FILES = {
+    'category.csv': {'table_name': 'reviews_category',
+                     'table_fields': ['id', 'name', 'slug'],
+                     'fields': 'id,name,slug'},
+    'genre.csv': {'table_name': 'reviews_genre',
+                  'table_fields': ['id', 'name', 'slug'],
+                  'fields': 'id,name,slug'},
+    'titles.csv': {'table_name': 'reviews_title',
+                   'table_fields': ['id', 'name', 'year', 'category'],
+                   'fields': 'id,name,year,category_id'},
+    'review.csv': {'table_name': 'reviews_review',
+                   'table_fields': ['id', 'title_id', 'text', 'author',
+                                    'score', 'pub_date'],
+                   'fields': 'id,title_id,text,author_id,score,pub_date'},
+    'comments.csv': {'table_name': 'reviews_comment',
+                     'table_fields': ['id', 'review_id', 'text', 'author',
+                                      'pub_date'],
+                     'fields': 'id,review_id,text,author_id,pub_date'},
+}
 
 
 class Command(BaseCommand):
-    """Команда загружает данные в БД из csv-файлов.
+    """Копирует данные из csv-файлов в БД.
 
-    Запуск: python manage.py command_test
+    Запуск команды: python manage.py import_csv_to_sqlite
     """
 
-    def handle(self, *args, **options):
-        # Загрузка данных из users.csv в таблицу users_user
-        with open('static/data/users.csv', newline='') as csv_file:
-            reader = csv.DictReader(csv_file)
-
-            for row in reader:
-                user = User(username=row['username'],
-                            email=row['email'],
-                            role=row['role'],
-                            bio=row['bio'],
-                            first_name=row['first_name'],
-                            last_name=row['last_name'])
-                user.save()
-
-        csv_file.close()
+    def handle(self, *args, **kwargs):
+        con = sq.connect('db.sqlite3')
+        cur = con.cursor()
+        for file_name, table_meta in CSV_FILES.items():
+            try:
+                with open(f'{DIR}{file_name}', encoding='utf-8') as csv_file:
+                    reader = csv.DictReader(csv_file)
+                    to_db = [
+                        [k[i] for i in table_meta['table_fields']]
+                        for k in reader
+                    ]
+                cur.executemany(SQL_TEMP.format(
+                    table=table_meta['table_name'],
+                    fields=table_meta['fields'],
+                    values=','.join(['?'] * len(table_meta['table_fields']))),
+                    to_db)
+                con.commit()
+                csv_file.close()
+            except Exception:
+                raise Exception
+            else:
+                print(f'Загрузка данных из {file_name} прошла успешно')
+        con.close()
